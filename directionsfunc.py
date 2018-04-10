@@ -4,6 +4,7 @@ Simple Program to help you get started with Google's APIs
 import urllib.request
 import json
 # global variables 
+stepslen=0
 step_duration_list = []
 step_startloc_lat_list = []
 step_startloc_lng_list = []
@@ -28,8 +29,8 @@ def directionsfunc(origin,destination):
 	directions = json.loads(response.decode('utf-8'))
 	legs = directions['routes'][0]['legs']
 	#iterate through the steps and print the html instructions (which are the directions) print distance for length of each step
+	global stepslen
 	stepslen= len(legs[0]['steps'])
-	print("number of steps: " + str(stepslen-1))
 	# define lists as the global ones
 	global step_duration_list
 	global step_startloc_lat_list
@@ -59,10 +60,26 @@ def directionsfunc(origin,destination):
 		step_endloc_lng_list.append(a)
 		a=legs[0]['steps'][x]['html_instructions']
 		step_html_list.append(a)
-
-		if x==0:
+		if ('maneuver' not in legs[0]['steps'][x]):		
 			step_maneuver_list.append('none')
 		else:
 			a=legs[0]['steps'][x]['maneuver']
 			step_maneuver_list.append(a)	
 	return None 
+def printdirections(x):
+	#print the array you want
+	print(str(x)+":"+ step_duration_list[x])
+	print(str(x)+":"+ str(step_startloc_lat_list[x]))
+	print(str(x)+":"+ str(step_startloc_lng_list[x]))
+	print(str(x)+":"+ str(step_endloc_lat_list[x]))
+	print(str(x)+":"+ str(step_endloc_lng_list[x]))
+	print(str(x)+":"+ step_html_list[x])
+	print(str(x)+":"+ step_maneuver_list[x])
+	return None 
+
+directionsfunc('rutgers','new brunswick')
+for x in range(stepslen):
+	printdirections(x)
+directionsfunc('edison','metuchen')	
+for x in range(stepslen):
+	printdirections(x)
