@@ -5,6 +5,7 @@ import urllib.request
 import json
 # global variables 
 stepslen=0
+step_distance_list = []
 step_duration_list = []
 step_startloc_lat_list = []
 step_startloc_lng_list = []
@@ -32,6 +33,7 @@ def directionsfunc(origin,destination):
 	global stepslen
 	stepslen= len(legs[0]['steps'])
 	# define lists as the global ones
+	global step_distance_list
 	global step_duration_list
 	global step_startloc_lat_list
 	global step_startloc_lng_list
@@ -40,6 +42,7 @@ def directionsfunc(origin,destination):
 	global step_html_list
 	global step_maneuver_list
 	# clear the lists 
+	del step_distance_list[:]
 	del step_duration_list[:]
 	del step_startloc_lat_list[:]
 	del step_startloc_lng_list[:]
@@ -48,6 +51,8 @@ def directionsfunc(origin,destination):
 	del step_html_list[:]
 	del step_maneuver_list[:]
 	for x in range(stepslen):
+		a=legs[0]['steps'][x]['distance']['text']
+		step_distance_list.append(a)
 		a=legs[0]['steps'][x]['duration']['text']
 		step_duration_list.append(a)
 		a=legs[0]['steps'][x]['start_location']['lat']
@@ -68,6 +73,7 @@ def directionsfunc(origin,destination):
 	return None 
 def printdirections(x):
 	#print the array you want
+	print(str(x)+":"+ step_distance_list[x])
 	print(str(x)+":"+ step_duration_list[x])
 	print(str(x)+":"+ str(step_startloc_lat_list[x]))
 	print(str(x)+":"+ str(step_startloc_lng_list[x]))
@@ -77,6 +83,7 @@ def printdirections(x):
 	print(str(x)+":"+ step_maneuver_list[x])
 	return None 
 
+#main 
 directionsfunc('rutgers','new brunswick')
 for x in range(stepslen):
 	printdirections(x)
