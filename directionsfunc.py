@@ -53,7 +53,7 @@ def directionsfunc(origin,destination):
 	for x in range(stepslen):
 		a=legs[0]['steps'][x]['distance']['text']
 		step_distance_list.append(a)
-		a=legs[0]['steps'][x]['duration']['text']
+		a=(legs[0]['steps'][x]['duration']['text']).split(' ')[0]
 		step_duration_list.append(a)
 		a=legs[0]['steps'][x]['start_location']['lat']
 		step_startloc_lat_list.append(a)
