@@ -3,6 +3,7 @@ Simple Program to help you get started with Google's APIs
 """
 import urllib.request
 import json
+import re
 # global variables 
 stepslen=0
 step_distance_list = []
@@ -14,6 +15,10 @@ step_endloc_lng_list = []
 step_html_list= []
 step_maneuver_list = []
 
+def cleanhtml(raw_html):
+	cleanr = re.compile('<.*?>')
+	cleantext = re.sub(cleanr, '', raw_html)
+	return cleantext
 
 def directionsfunc(origin,destination):
 	#Google MapsDdirections API endpoint
@@ -64,6 +69,7 @@ def directionsfunc(origin,destination):
 		a=legs[0]['steps'][x]['end_location']['lng']
 		step_endloc_lng_list.append(a)
 		a=legs[0]['steps'][x]['html_instructions']
+		a=cleanhtml(a)
 		step_html_list.append(a)
 		if ('maneuver' not in legs[0]['steps'][x]):		
 			step_maneuver_list.append('none')
