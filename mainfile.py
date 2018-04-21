@@ -218,6 +218,58 @@ def printdirections(x):
 	return None 
 
 
+def leftKey(event):
+	
+	global currentframe
+		
+	if (currentframe==1):
+		currentframe=4
+		raise_frame(f4)
+
+	elif (currentframe==2):
+		currentframe=1
+		raise_frame(f1)
+
+	elif (currentframe==3):
+		currentframe=2
+		raise_frame(f2)
+
+	elif (currentframe==4):
+		currentframe=3
+		raise_frame(f3)
+	else:
+		currentframe=1
+		raise_frame(f1)
+
+	print("Left Key pressed")
+
+
+def rightKey(event):
+
+	global currentframe
+
+	if (currentframe==1):
+		currentframe=2
+		raise_frame(f2)
+
+	elif (currentframe==2):
+		currentframe=3
+		raise_frame(f3)
+
+	elif (currentframe==3):
+		currentframe=4
+		raise_frame(f4)
+
+	elif (currentframe==4):
+		currentframe=1
+		raise_frame(f1)
+	else:
+		currentframe=1
+		raise_frame(f1)
+
+	print("Right key pressed")
+
+
 #----------------------------------------  FUNCTIONS  END    ------------------------------------------------
 
 
@@ -234,6 +286,8 @@ f2 = Frame(root,width=800, height=480)
 f3 = Frame(root,width=800, height=480)
 f4 = Frame(root,width=800, height=480)
 f5 = Frame(root,width=800, height=480)
+
+currentframe = 1
 
 f1.configure(bg='black')
 f2.configure(bg='black')
@@ -279,7 +333,7 @@ button1=Button(f1, highlightbackground='black', text='Get Directions', command=l
 #button2=Button(f1, highlightbackground='black', text='Begin', command=lambda:raise_frame(f5)).pack(pady=5)
 
 
-button3=Button(f1, highlightbackground='black', text='Go to frame 2', command=lambda:raise_frame(f2)).pack(pady=30)
+# button3=Button(f1, highlightbackground='black', text='Go to frame 2', command=lambda:raise_frame(f2)).pack(pady=30)
 
 
 
@@ -294,7 +348,7 @@ clock.pack(fill=BOTH, expand=1)
 
 tick()
 
-button4=Button(f2, highlightbackground='black', text='Go to frame 3', command=lambda:raise_frame(f3)).pack(pady=50)
+# button4=Button(f2, highlightbackground='black', text='Go to frame 3', command=lambda:raise_frame(f3)).pack(pady=50)
 
 
 
@@ -305,7 +359,7 @@ button4=Button(f2, highlightbackground='black', text='Go to frame 3', command=la
 Label(f3,text='Speed / RPM',bg='black',fg='white').pack(side=TOP,pady=10)
 
 
-button5=Button(f3, highlightbackground='black', text='Go to frame 4', command=lambda:raise_frame(f4)).pack(pady=50)
+# button5=Button(f3, highlightbackground='black', text='Go to frame 4', command=lambda:raise_frame(f4)).pack(pady=50)
 
 
 #  -------------        SPEED       --------------
@@ -338,7 +392,7 @@ Label(f4,text='OBD Diagnostics',bg='black',fg='white').pack(side=TOP,pady=10)
 Label(f4,text='No alerts at this moment!',bg='black',fg='white').pack(side=TOP,pady=20)
 
 
-button6=Button(f4, highlightbackground='black', text='Go to frame 1', command=lambda:raise_frame(f1)).pack(pady=50)
+# button6=Button(f4, highlightbackground='black', text='Go to frame 1', command=lambda:raise_frame(f1)).pack(pady=50)
 
 
 
@@ -364,6 +418,10 @@ Label(f5,text='DIRECTIONS',bg='black',fg='white').pack(side=TOP,pady=10)
 
 
 raise_frame(f1)
+
+
+root.bind('<Left>',leftKey)
+root.bind('<Right>',rightKey)
 
 root.mainloop()
 
