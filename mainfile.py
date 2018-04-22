@@ -2,13 +2,20 @@ import urllib.request
 import json
 import time
 import re
-#import obd
-#import overpy
+import obd
+import overpy
 import sys
 import simplejson as json
 import tkinter
 from tkinter import *
 from PIL import ImageTk, Image
+import serial
+import time
+import subprocess
+import threading
+import os
+import pygame
+
 
 #----------------------------------------  FUNCTIONS  BEGIN    ------------------------------------------------
 
@@ -33,29 +40,6 @@ def tick():
     # could use >200 ms, but display gets jerky
     clock.after(200, tick)
 
-def printValuesSPEED():
-    global rpm1
-    # get the current RPM from car
-    rpm2 = rpmConnection.query(obd.commands.RPM)
-    # if rpm string has changed, update it
-    if rpm2 != rpm1:
-        rpm1 = rpm2
-        rpm.config(text=str(rpm2).split('.')[0])
-    # calls itself every 200 milliseconds
-    # to update the rpm display as needed
-    rpm.after(200, printValues)
-
-def printValuesRPM():
-    global rpm1
-    # get the current RPM from car
-    rpm2 = rpmConnection.query(obd.commands.RPM)
-    # if rpm string has changed, update it
-    if rpm2 != rpm1:
-        rpm1 = rpm2
-        rpm.config(text=str(rpm2).split('.')[0])
-    # calls itself every 200 milliseconds
-    # to update the rpm display as needed
-    rpm.after(200, printValues)
 
 def maxspeed(coordinates, radius):
 	lat, lon = coordinates
@@ -221,10 +205,10 @@ def printdirections(x):
 def leftKey(event):
 	
 	global currentframe
-		
+
 	if (currentframe==1):
-		currentframe=4
-		raise_frame(f4)
+		currentframe=7
+		raise_frame(f7)
 
 	elif (currentframe==2):
 		currentframe=1
@@ -237,6 +221,12 @@ def leftKey(event):
 	elif (currentframe==4):
 		currentframe=3
 		raise_frame(f3)
+	elif (currentframe==6):
+		currentframe=4
+		raise_frame(f4)
+	elif (currentframe==7):
+		currentframe=6
+		raise_frame(f6)
 	else:
 		currentframe=1
 		raise_frame(f1)
@@ -261,6 +251,12 @@ def rightKey(event):
 		raise_frame(f4)
 
 	elif (currentframe==4):
+		currentframe=6
+		raise_frame(f6)
+	elif (currentframe==6):
+		currentframe=7
+		raise_frame(f7)
+	elif (currentframe==7):
 		currentframe=1
 		raise_frame(f1)
 	else:
@@ -270,10 +266,69 @@ def rightKey(event):
 	print("Right key pressed")
 
 
+
+# -------------------   LIDAR CODE --------------------------- 
+
+
+root=Tk()
+
+lidar_distance=100.0
+lidar_distance_label=IntVar()
+lidar_distance_label.set(100)
+car_speed=50
+Dist_Total=10
+
+def run_lidar():
+    ser = serial.Serial('/dev/ttyUSB1',115200,timeout = 1)
+    ser.write(bytes(b'B'))
+    ser.write(bytes(b'W'))
+    ser.write(bytes(2))
+    ser.write(bytes(0))
+    ser.write(bytes(0))
+    ser.write(bytes(0))
+    ser.write(bytes(1))
+    ser.write(bytes(6))
+
+    global Dist_Total
+    global lidar_distance
+    while(True):
+        while(ser.in_waiting >= 9):
+            time.sleep(0.05)
+            if((b'Y' == ser.read()) and ( b'Y' == ser.read())):
+                Dist_L = ser.read()
+                Dist_H = ser.read()
+                Dist_Total = (ord(Dist_H) * 256) + (ord(Dist_L))
+                for i in range (0,5):
+                    ser.read()
+            lidar_distance=Dist_Total/30.48
+            lidar_distance_label.set(lidar_distance)
+            print(Dist_Total)
+
+
+
+
+# -------------------   GPS  CODE --------------------------- 
+
+#def getLatLogSpeed():
+#
+#	python3_command = "python newGPSTest.py"
+#	process=subprocess.Popen(python3_command.split(), stdout=subprocess.PIPE)
+#
+#	output, error = process.communicate()
+#
+#	output=output.decode('utf8')
+#	speedReport.after(200,getLatLogSpeed)
+#	return(output)
+
+
+# --------------    MUSIC PLAYER CODE ---------------------
+
+
+
 #----------------------------------------  FUNCTIONS  END    ------------------------------------------------
 
 
-root = Tk()
+
 root.title('THUD')
 
 
@@ -286,6 +341,9 @@ f2 = Frame(root,width=800, height=480)
 f3 = Frame(root,width=800, height=480)
 f4 = Frame(root,width=800, height=480)
 f5 = Frame(root,width=800, height=480)
+f6 = Frame(root,width=800, height=480)
+f7 = Frame(root,width=800, height=480)
+
 
 currentframe = 1
 
@@ -294,9 +352,10 @@ f2.configure(bg='black')
 f3.configure(bg='black')
 f4.configure(bg='black')
 f5.configure(bg='black')
+f6.configure(bg='black')
+f7.configure(bg='black')
 
-
-for frame in (f1, f2, f3, f4, f5):
+for frame in (f1, f2, f3, f4, f5, f6, f7):
     frame.grid(row=0, column=0, sticky='news')
 
 
@@ -356,35 +415,16 @@ tick()
 #-----------------------------------------------------     FRAME 3      --------------------------------------------------------------------------------
 
 
-Label(f3,text='Speed / RPM',bg='black',fg='white').pack(side=TOP,pady=10)
+Label(f3,text='Speed',bg='black',fg='white').pack(side=TOP,pady=10)
 
 
 # button5=Button(f3, highlightbackground='black', text='Go to frame 4', command=lambda:raise_frame(f4)).pack(pady=50)
 
-
-#  -------------        SPEED       --------------
-# speed1 = ''
-# speed = Label(f3, font=('times', 100, 'bold'), bg='black', fg='white')
-# speed.pack(fill=BOTH, expand=1)
-
-#speedConnection = obd.Async() # create an asynchronous connection
-#speedConnection.watch(obd.commands.SPEED) # keep track of speed
-#speedConnection.start() # start asynchronous connection for speed
-
-#printValuesSPEED()
-
-#  -------------        RPM       ----------------
-# rpm1 = ''
-# rpm = Label(f3, font=('times', 100, 'bold'), bg='black', fg='white')
-# rpm.pack(fill=BOTH, expand=1)
-
-#rpmConnection = obd.Async() # create an asynchronous connection
-#rpmConnection.watch(obd.commands.RPM) # keep track of RPM
-#rpmConnection.start() # start asynchronous connection for RPM
-
-#printValuesRPM()
-
-
+#Speedholder=getLatLogSpeed()
+#print(Speedholder)
+speedReport=Label(f3,bg='black',fg='white').pack(side=TOP,pady=10)
+#Speedholder=getLatLogSpeed()
+#print(Speedholder)
 
 #----------------------------------------------------     FRAME 4        ---------------------------------------------------------------------------------
 
@@ -410,6 +450,109 @@ Label(f5,text='DIRECTIONS',bg='black',fg='white').pack(side=TOP,pady=10)
 
 # Label(f5,text='Current Speed Limit',bg='black',fg='white').pack(side=TOP,pady=10)
 
+Label(f6,text='MUSIC PLAYER',bg='black',fg='white').pack(side=TOP,pady=10)
+
+
+listofsongs = []
+v = StringVar()
+songlabel = Label(f6,textvariable=v,width=35)
+index = 0
+
+def directorychooser():
+    directory="/home/pi/Desktop"
+    os.chdir(directory)
+
+    for files in os.listdir(directory):
+        if files.endswith(".mp3"):
+            listofsongs.append(files)
+
+    pygame.mixer.init()
+    pygame.mixer.music.load(listofsongs[0])
+    pygame.mixer.music.play()
+
+directorychooser()
+
+def updatelabel():
+    global index
+    global songname
+    v.set(listofsongs[index])
+
+def nextsong(event):
+    global index
+    if index<len(listofsongs)-1:
+        index += 1
+    else: 
+        index=0
+    pygame.mixer.music.load(listofsongs[index])
+    pygame.mixer.music.play()
+    updatelabel()
+
+def prevsong(event):
+    global index
+    if index>0:
+        index -= 1
+    else: 
+        index=len(listofsongs)-1
+    pygame.mixer.music.load(listofsongs[index])
+    pygame.mixer.music.play()
+    updatelabel()
+
+def stopsong(event):
+    pygame.mixer.music.stop()
+    v.set("")
+
+def playsong(event):
+    pygame.mixer.init()
+    pygame.mixer.music.load(listofsongs[index])
+    pygame.mixer.music.play()
+    updatelabel()
+
+
+listbox = Listbox(f6)
+listbox.pack()
+
+listofsongs.reverse()
+
+for items in listofsongs:
+    listbox.insert(0,items)
+
+listofsongs.reverse()
+
+nextbutton = Button(f6,text = 'Next Song')
+nextbutton.pack()
+
+previousbutton = Button(f6,text = 'Previous Song')
+previousbutton.pack()
+
+stopbutton = Button(f6,text='Stop Music')
+stopbutton.pack()
+
+playbutton = Button(f6,text='Play Music')
+playbutton.pack()
+
+nextbutton.bind("<Button-1>",nextsong)
+previousbutton.bind("<Button-1>",prevsong)
+stopbutton.bind("<Button-1>",stopsong)
+playbutton.bind("<Button-1>",playsong)
+songlabel.pack()
+
+
+
+
+
+
+
+
+
+l=threading.Thread(target=run_lidar)
+l.daemon=True
+l.start()
+
+
+Label(f7,text='LIDAR TEST',bg='black',fg='white').pack(side=TOP,pady=10)
+
+Label(f7,textvariable=lidar_distance_label, bg='black',fg='white').pack(side=TOP,pady=10)
+
 
 
 
@@ -423,5 +566,7 @@ raise_frame(f1)
 root.bind('<Left>',leftKey)
 root.bind('<Right>',rightKey)
 
-root.mainloop()
 
+#print(getLatLogSpeed())
+
+root.mainloop()
