@@ -12,10 +12,9 @@ from PIL import ImageTk, Image
 import serial
 import time
 import subprocess
-import threading
 import os
 import pygame
-
+import threading
 
 #----------------------------------------  FUNCTIONS  BEGIN    ------------------------------------------------
 
@@ -39,6 +38,18 @@ def tick():
     # to update the time display as needed
     # could use >200 ms, but display gets jerky
     clock.after(200, tick)
+
+def printValuesSPEED():
+    global speed1
+    # get the current RPM from car
+    speed2 = speedConnection.query(obd.commands.SPEED)
+    # if rpm string has changed, update it
+    if speed2 != speed1:
+        speed1 = speed2
+        speed.config(text=speed2)
+    # calls itself every 200 milliseconds
+    # to update the rpm display as needed
+    speed.after(200, printValues)
 
 
 def maxspeed(coordinates, radius):
@@ -153,7 +164,7 @@ def directionsfunc():
 	img=Image.open(path)
 	# img=img.resize((80,80),Image.ANTIALIAS)
 	ph=ImageTk.PhotoImage(img)
-	line4=tkinter.Label(f5, image=ph)
+	line4=tkinter.Label(f5, image=ph, borderwidth=0, highlightthickness=0)
 	line4.image=ph
 
 	line1.pack()
@@ -172,7 +183,7 @@ def update_status(instructionholder,line1,line2, line3, line4, line5):
 	line1["text"]=step_html_list[instructionholder]
 	line2["text"]="Total Distance:" + step_distance_list[instructionholder]
 	line5["text"]="Distance Remaining: 0.1 miles"
-	line3["text"]="Current Speed Limit: " # + str(maxspeed((40.516972, -74.435804),50))
+	line3["text"]="Current Speed Limit: 25 MPH" # + str(maxspeed((40.516972, -74.435804),50))
 
 	img=ImageTk.PhotoImage(Image.open(step_maneuver_list[instructionholder]+".jpg"))
 	line4.configure(image=img)
@@ -205,7 +216,7 @@ def printdirections(x):
 def leftKey(event):
 	
 	global currentframe
-
+		
 	if (currentframe==1):
 		currentframe=7
 		raise_frame(f7)
@@ -266,17 +277,17 @@ def rightKey(event):
 	print("Right key pressed")
 
 
-
 # -------------------   LIDAR CODE --------------------------- 
 
 
 root=Tk()
 
+
 lidar_distance=100.0
-lidar_distance_label=IntVar()
-lidar_distance_label.set(100)
-car_speed=50
-Dist_Total=10
+lidar_distancelabel=IntVar()
+lidar_distancelabel.set(0)
+
+current_speed=0
 
 def run_lidar():
     ser = serial.Serial('/dev/ttyUSB1',115200,timeout = 1)
@@ -289,11 +300,12 @@ def run_lidar():
     ser.write(bytes(1))
     ser.write(bytes(6))
 
-    global Dist_Total
     global lidar_distance
+    global current_speed
+
     while(True):
+        time.sleep(1)
         while(ser.in_waiting >= 9):
-            time.sleep(0.05)
             if((b'Y' == ser.read()) and ( b'Y' == ser.read())):
                 Dist_L = ser.read()
                 Dist_H = ser.read()
@@ -301,32 +313,68 @@ def run_lidar():
                 for i in range (0,5):
                     ser.read()
             lidar_distance=Dist_Total/30.48
-            lidar_distance_label.set(lidar_distance)
-            print(Dist_Total)
+            lidar_distancelabel.set(lidar_distance)
+            if lidar_distance < 5 :
+                pygame.mixer.init()
+                pygame.mixer.music.load("beep.mp3")
+                pygame.mixer.music.play()
+                while pygame.mixer.music.get_busy() == True:
+                    continue
+        print(lidar_distance)
 
-
-
+t=threading.Thread(target=run_lidar)
+t.daemon=True
+t.start()
 
 # -------------------   GPS  CODE --------------------------- 
 
-#def getLatLogSpeed():
-#
-#	python3_command = "python newGPSTest.py"
-#	process=subprocess.Popen(python3_command.split(), stdout=subprocess.PIPE)
-#
-#	output, error = process.communicate()
-#
-#	output=output.decode('utf8')
-#	speedReport.after(200,getLatLogSpeed)
-#	return(output)
+def getLat():
+
+	python3_command = "python getLat.py"
+	process=subprocess.Popen(python3_command.split(), stdout=subprocess.PIPE)
+	output, error = process.communicate()
+	output=output.decode('utf8')
+	return(output)
+
+def getLon():
+
+	python3_command = "python getLon.py"
+	process=subprocess.Popen(python3_command.split(), stdout=subprocess.PIPE)
+	output, error = process.communicate()
+	output=output.decode('utf8')
+	return(output)
+
+current_speed_label=IntVar()
+current_speed_label.set(0)
 
 
-# --------------    MUSIC PLAYER CODE ---------------------
+def getSpeed():
+
+	python3_command = "python getSpeed.py"
+	process=subprocess.Popen(python3_command.split(), stdout=subprocess.PIPE)
+	output, error= process.communicate()
+	output=output.decode('utf8')
+	global current_speed
+	current_speed=output
+	current_speed_label.set(output)
+	return(output)
+
+
+speedthread=threading.Thread(target=getSpeed)
+speedthread.daemon=True
+speedthread.start()
+
+
+#   --------------------   MUSIC PLAYER  CODE    ------------------
+
+
+
+
+
 
 
 
 #----------------------------------------  FUNCTIONS  END    ------------------------------------------------
-
 
 
 root.title('THUD')
@@ -354,6 +402,7 @@ f4.configure(bg='black')
 f5.configure(bg='black')
 f6.configure(bg='black')
 f7.configure(bg='black')
+
 
 for frame in (f1, f2, f3, f4, f5, f6, f7):
     frame.grid(row=0, column=0, sticky='news')
@@ -384,15 +433,7 @@ entry2 = Entry(f1)
 entry2.pack(side=TOP,padx=150,pady=10)
 
 
-# 	frame.tkraise()
-
 button1=Button(f1, highlightbackground='black', text='Get Directions', command=lambda:raise_frame_special(f5)).pack(expand=True,pady=5)
-
-
-#button2=Button(f1, highlightbackground='black', text='Begin', command=lambda:raise_frame(f5)).pack(pady=5)
-
-
-# button3=Button(f1, highlightbackground='black', text='Go to frame 2', command=lambda:raise_frame(f2)).pack(pady=30)
 
 
 
@@ -407,7 +448,6 @@ clock.pack(fill=BOTH, expand=1)
 
 tick()
 
-# button4=Button(f2, highlightbackground='black', text='Go to frame 3', command=lambda:raise_frame(f3)).pack(pady=50)
 
 
 
@@ -415,16 +455,13 @@ tick()
 #-----------------------------------------------------     FRAME 3      --------------------------------------------------------------------------------
 
 
-Label(f3,text='Speed',bg='black',fg='white').pack(side=TOP,pady=10)
 
+Label(f3,text='Speed', bg='black',fg='white').pack(side=TOP,pady=10)
+Label(f3,textvariable=current_speed_label, bg='black',fg='white').pack(side=TOP,pady=10)
 
 # button5=Button(f3, highlightbackground='black', text='Go to frame 4', command=lambda:raise_frame(f4)).pack(pady=50)
 
-#Speedholder=getLatLogSpeed()
-#print(Speedholder)
-speedReport=Label(f3,bg='black',fg='white').pack(side=TOP,pady=10)
-#Speedholder=getLatLogSpeed()
-#print(Speedholder)
+
 
 #----------------------------------------------------     FRAME 4        ---------------------------------------------------------------------------------
 
@@ -432,31 +469,28 @@ Label(f4,text='OBD Diagnostics',bg='black',fg='white').pack(side=TOP,pady=10)
 Label(f4,text='No alerts at this moment!',bg='black',fg='white').pack(side=TOP,pady=20)
 
 
-# button6=Button(f4, highlightbackground='black', text='Go to frame 1', command=lambda:raise_frame(f1)).pack(pady=50)
-
 
 
 #----------------------------------------------------     FRAME 5        ---------------------------------------------------------------------------------
 
 
 Label(f5,text='DIRECTIONS',bg='black',fg='white').pack(side=TOP,pady=10)
-# button100=Button(f5, highlightbackground='black', text='start', command=lambda:directionsfunc)
 
 
-# Label(f5,text='Distance',bg='black',fg='white').pack(side=TOP,pady=10)
-# Label(f5,text='Remaining Distance',bg='black',fg='white').pack(side=TOP,pady=10)
 
-# # PICTURE
 
-# Label(f5,text='Current Speed Limit',bg='black',fg='white').pack(side=TOP,pady=10)
 
+
+#    MUSIC PLAYER CODE
 Label(f6,text='MUSIC PLAYER',bg='black',fg='white').pack(side=TOP,pady=10)
-
 
 listofsongs = []
 v = StringVar()
 songlabel = Label(f6,textvariable=v,width=35)
 index = 0
+
+
+
 
 def directorychooser():
     directory="/home/pi/Desktop"
@@ -481,7 +515,7 @@ def nextsong(event):
     global index
     if index<len(listofsongs)-1:
         index += 1
-    else: 
+    else:
         index=0
     pygame.mixer.music.load(listofsongs[index])
     pygame.mixer.music.play()
@@ -491,7 +525,7 @@ def prevsong(event):
     global index
     if index>0:
         index -= 1
-    else: 
+    else:
         index=len(listofsongs)-1
     pygame.mixer.music.load(listofsongs[index])
     pygame.mixer.music.play()
@@ -506,7 +540,6 @@ def playsong(event):
     pygame.mixer.music.load(listofsongs[index])
     pygame.mixer.music.play()
     updatelabel()
-
 
 listbox = Listbox(f6)
 listbox.pack()
@@ -530,29 +563,11 @@ stopbutton.pack()
 playbutton = Button(f6,text='Play Music')
 playbutton.pack()
 
-nextbutton.bind("<Button-1>",nextsong)
-previousbutton.bind("<Button-1>",prevsong)
-stopbutton.bind("<Button-1>",stopsong)
-playbutton.bind("<Button-1>",playsong)
-songlabel.pack()
 
 
-
-
-
-
-
-
-
-l=threading.Thread(target=run_lidar)
-l.daemon=True
-l.start()
-
+#    LIDAR  CODE
 
 Label(f7,text='LIDAR TEST',bg='black',fg='white').pack(side=TOP,pady=10)
-
-Label(f7,textvariable=lidar_distance_label, bg='black',fg='white').pack(side=TOP,pady=10)
-
 
 
 
@@ -566,7 +581,12 @@ raise_frame(f1)
 root.bind('<Left>',leftKey)
 root.bind('<Right>',rightKey)
 
-
-#print(getLatLogSpeed())
+nextbutton.bind("<Button-1>",nextsong)
+previousbutton.bind("<Button-1>",prevsong)
+stopbutton.bind("<Button-1>",stopsong)
+playbutton.bind("<Button-1>",playsong)
+songlabel.pack()
 
 root.mainloop()
+
+
