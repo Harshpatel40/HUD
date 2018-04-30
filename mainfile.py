@@ -276,6 +276,15 @@ def rightKey(event):
 
 	print("Right key pressed")
 
+globe_lati=1234
+globe_long=5678
+
+def use_cur_location():
+	global globe_lati
+	global glove_long
+	entry.delete(0,END)
+	entry.insert(0, str(globe_lati)+","+str(globe_long))
+
 
 # -------------------   LIDAR CODE --------------------------- 
 
@@ -422,25 +431,27 @@ step_maneuver_list = []
 
 #-----------------------------------------------    FRAME   1      --------------------------------------------------------------------------------------
 
-Label(f1,text='Starting Point?',bg='black',fg='white').pack(side=TOP,padx=150,pady=10)
+Label(f1,text='NAVIGATION',bg='black',fg='white',font=("Courier New",20)).pack(side=TOP,padx=170,pady=10)
+Label(f1,text='Starting Point?',bg='black',fg='white',font=("Courier New",18)).pack(side=TOP,padx=170,pady=10)
+buttonfirst1=Button(f1, highlightbackground='black',text='Use Current Location',font=("Courier New",18),command=use_cur_location).pack(expand=True, pady=5)
 
 entry = Entry(f1)
-entry.pack(side=TOP,padx=150,pady=10)
+entry.pack(side=TOP,padx=170,pady=10)
 
-Label(f1,text='Final Destination?',bg='black',fg='white').pack(side=TOP,padx=150,pady=10)
+Label(f1,text='Final Destination?',bg='black',fg='white',font=("Courier New",18)).pack(side=TOP,padx=170,pady=10)
 
 entry2 = Entry(f1)
-entry2.pack(side=TOP,padx=150,pady=10)
+entry2.pack(side=TOP,padx=170,pady=10)
 
 
-button1=Button(f1, highlightbackground='black', text='Get Directions', command=lambda:raise_frame_special(f5)).pack(expand=True,pady=5)
+button1=Button(f1, highlightbackground='black', text='Get Directions',font=("Courier New",18), command=lambda:raise_frame_special(f5)).pack(expand=True,pady=5)
 
 
 
 #--------------------------------------------------     FRAME 2      --------------------------------------------------------------------------------
 
 
-Label(f2,text='Time',bg='black',fg='white').pack(side=TOP,pady=10)
+Label(f2,text='TIME',bg='black',fg='white',font=("Courier New",20)).pack(side=TOP,pady=10,padx=170)
 
 time1 = ''
 clock = Label(f2, font=('times', 100, 'bold'), bg='black', fg='white')
@@ -456,17 +467,18 @@ tick()
 
 
 
-Label(f3,text='Speed', bg='black',fg='white').pack(side=TOP,pady=10)
-Label(f3,textvariable=current_speed_label, bg='black',fg='white').pack(side=TOP,pady=10)
-
+Label(f3,text='SPEED', bg='black',fg='white',font=("Courier New",20)).pack(side=TOP,pady=10)
+Label(f3,textvariable=current_speed_label, bg='black',fg='white',font=("Courier New",70)).pack(side=TOP,pady=10,padx=170)
+print(current_speed_label)
+Label(f3,text='MPH',bg='black',fg='white',font=("Courier New",44)).pack(side=TOP,pady=10,padx=170)
 # button5=Button(f3, highlightbackground='black', text='Go to frame 4', command=lambda:raise_frame(f4)).pack(pady=50)
 
 
 
 #----------------------------------------------------     FRAME 4        ---------------------------------------------------------------------------------
 
-Label(f4,text='OBD Diagnostics',bg='black',fg='white').pack(side=TOP,pady=10)
-Label(f4,text='No alerts at this moment!',bg='black',fg='white').pack(side=TOP,pady=20)
+Label(f4,text='OBD DIAGNOSTICS',bg='black',fg='white',font=("Courier New",20)).pack(side=TOP,pady=10)
+Label(f4,text='No alerts at this moment!',bg='black',fg='white',font=("Courier New",26)).pack(side=TOP,pady=20)
 
 
 
@@ -474,7 +486,7 @@ Label(f4,text='No alerts at this moment!',bg='black',fg='white').pack(side=TOP,p
 #----------------------------------------------------     FRAME 5        ---------------------------------------------------------------------------------
 
 
-Label(f5,text='DIRECTIONS',bg='black',fg='white').pack(side=TOP,pady=10)
+Label(f5,text='DIRECTIONS',bg='black',fg='white',font=("Courier New",20)).pack(side=TOP,pady=10)
 
 
 
@@ -482,7 +494,7 @@ Label(f5,text='DIRECTIONS',bg='black',fg='white').pack(side=TOP,pady=10)
 
 
 #    MUSIC PLAYER CODE
-Label(f6,text='MUSIC PLAYER',bg='black',fg='white').pack(side=TOP,pady=10)
+Label(f6,text='MUSIC PLAYER',bg='black',fg='white',font=("Courier New",20)).pack(side=TOP,pady=10)
 
 listofsongs = []
 v = StringVar()
@@ -567,9 +579,9 @@ playbutton.pack()
 
 #    LIDAR  CODE
 
-Label(f7,text='LIDAR TEST',bg='black',fg='white').pack(side=TOP,pady=10)
-
-
+Label(f7,text='LIDAR TEST',bg='black',fg='white',font=("Courier New",20)).pack(side=TOP,pady=10)
+Label(f7,textvariable=lidar_distancelabel,bg='black',fg='white',font=("Courier New",70)).pack(side=TOP,pady=10)
+Label(f7,text='Feet',bg='black',fg='white',font=("Courier New",44)).pack(side=TOP,pady=10)
 
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
